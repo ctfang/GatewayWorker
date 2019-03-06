@@ -1,0 +1,10 @@
+github.com/ctfang/command v0.0.0-20190214090442-521b850522a6 h1:ZXz5rqUgKCDuFfv3+Gt3dJ1ZB6f0jBsZGHbTitDihJA=
+github.com/ctfang/command v0.0.0-20190214090442-521b850522a6/go.mod h1:iWJcUCwZReswQ7T5IaRE6ZvGzZ/m9v53Z1na20JttV8=
+github.com/ctfang/command v0.0.0-20190222071816-3f41dba3eaad h1:mVUXx9UvW6Yg39stuMMsn52na49xzt5wimJ7/qJNw44=
+github.com/ctfang/command v0.0.0-20190222071816-3f41dba3eaad/go.mod h1:iWJcUCwZReswQ7T5IaRE6ZvGzZ/m9v53Z1na20JttV8=
+github.com/ctfang/command v0.0.0-20190223055504-7682f822e4d0 h1:qdeI7+IYefipey4zaOJQp4m4UlYwByBJITi0e2nIfj8=
+github.com/ctfang/command v0.0.0-20190223055504-7682f822e4d0/go.mod h1:iWJcUCwZReswQ7T5IaRE6ZvGzZ/m9v53Z1na20JttV8=
+github.com/ctfang/command v0.0.0-20190225130348-b3c29f95f8dc h1:UneLP0DQxidMi9DzNUFy3ShdjQHVwIYFIp8OHZucqqY=
+github.com/ctfang/command v0.0.0-20190225130348-b3c29f95f8dc/go.mod h1:iWJcUCwZReswQ7T5IaRE6ZvGzZ/m9v53Z1na20JttV8=
+github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=
+github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
