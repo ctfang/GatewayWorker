@@ -1,8 +1,12 @@
 package console
 
 import (
-	"GoGatewayWorker/gateway"
-	"GoGatewayWorker/network"
+	"GatewayWorker/events"
+	"GatewayWorker/events/gateway"
+	"GatewayWorker/network"
+	"GatewayWorker/network/protocol"
+	"GatewayWorker/network/tcp"
+	"GatewayWorker/network/ws"
 	"github.com/ctfang/command"
 )
 
@@ -31,15 +35,27 @@ func (Gateway) Configure() command.Configure {
 }
 
 func (Gateway) Execute(input command.Input) {
+	events.GatewayAddress = network.NewAddress(input.GetOption("gateway"))
+	events.WorkerAddress = network.NewAddress(input.GetOption("worker"))
+	events.RegisterAddress = network.NewAddress(input.GetOption("register"))
+	events.SecretKey = input.GetOption("secret")
 
-	gateway.GatewayAddress = network.NewAddress(input.GetOption("gateway"))
-	gateway.WorkerAddress = network.NewAddress(input.GetOption("worker"))
-	gateway.RegisterAddress = network.NewAddress(input.GetOption("register"))
-	gateway.SecretKey = input.GetOption("secret")
+	// 启动一个内部通讯tcp server
+	worker := tcp.NewServer()
+	worker.SetAddress(events.WorkerAddress)
+	worker.SetConnectionEvent(gateway.NewWorkerEvent())
+	worker.SetProtocol(protocol.NewGatewayProtocol())
+	go worker.ListenAndServe()
 
-	ws := network.WebSocket{
-		Addr:  gateway.GatewayAddress,
-		Event: &gateway.GatewayEvent{},
-	}
-	ws.ListenAndServe()
+	// 连接到注册中心
+	register := tcp.NewClient()
+	register.SetAddress(events.RegisterAddress)
+	register.SetConnectionEvent(gateway.NewRegisterEvent())
+	go register.ListenAndServe()
+
+	// 启动对客户端的websocket连接
+	server := ws.Server{}
+	server.SetAddress(events.GatewayAddress)
+	server.SetConnectionEvent(gateway.NewWebSocketEvent())
+	server.ListenAndServe()
 }

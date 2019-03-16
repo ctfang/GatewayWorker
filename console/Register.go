@@ -1,10 +1,10 @@
 package console
 
 import (
-	"GoGatewayWorker/gateway"
-	"GoGatewayWorker/network"
-	"GoGatewayWorker/protocol"
-	"GoGatewayWorker/register"
+	"GatewayWorker/events"
+	"GatewayWorker/events/register"
+	"GatewayWorker/network"
+	"GatewayWorker/network/tcp"
 	"github.com/ctfang/command"
 )
 
@@ -23,19 +23,19 @@ func (Register) Configure() command.Configure {
 				{Name: "runType", Description: "执行操作：start、stop、status"},
 			},
 			Option: []command.ArgParam{
-				{Name: "addr", Description: "手动设置地址"},
+				{Name: "register", Description: "手动设置地址"},
+				{Name: "secret", Default: "", Description: "通讯秘钥"},
 			},
 		},
 	}
 }
 
 func (Register) Execute(input command.Input) {
-	gateway.RegisterAddress = network.NewAddress(input.GetOption("register"))
-	gateway.SecretKey = input.GetOption("secret")
+	events.RegisterAddress = network.NewAddress(input.GetOption("register"))
+	events.SecretKey = input.GetOption("secret")
 
-	tcp := network.TcpServer{}
-	tcp.SetAddress(gateway.RegisterAddress)
-	tcp.SetProtocol(protocol.Text{})
-	tcp.SetEvent(register.NewRegisterServerEvent())
-	tcp.ListenAndServe()
+	server := tcp.NewServer()
+	server.SetAddress(events.RegisterAddress)
+	server.SetConnectionEvent(register.NewRegisterEvent())
+	server.ListenAndServe()
 }

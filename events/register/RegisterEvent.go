@@ -4,24 +4,8 @@ import (
 	"GatewayWorker/network"
 	"encoding/json"
 	"fmt"
+	"log"
 )
-
-// 注册中心
-type RegisterServerEvent struct {
-	// ID 地址保存
-	gatewayConnections map[uint32]string
-	workerConnections  map[uint32]*network.TcpServerClient
-	// 秘要
-	SecretKey string
-}
-
-func NewRegisterServerEvent() *RegisterServerEvent {
-	reg := RegisterServerEvent{
-		gatewayConnections: make(map[uint32]string),
-		workerConnections:  make(map[uint32]*network.TcpServerClient),
-	}
-	return &reg
-}
 
 type RegisterMessage struct {
 	Event     string `json:"event"`
@@ -29,30 +13,34 @@ type RegisterMessage struct {
 	SecretKey string `json:"secret_key"`
 }
 
-func (r *RegisterServerEvent) OnStart(tcp *network.TcpServer) {
+type RegisterEvent struct {
+	// ID 地址保存
+	gatewayConnections map[uint32]string
+	workerConnections  map[uint32]network.Connect
+	// 秘要
+	SecretKey string
+}
+
+func (*RegisterEvent) OnStart(listen network.ListenTcp) {
+	log.Println("register server listening at: ", listen.GetAddress().Str)
+}
+
+func (*RegisterEvent) OnConnect(c network.Connect) {
 
 }
 
-// 新链接
-func (r *RegisterServerEvent) OnConnect(c *network.TcpServerClient) {
-	//
-	c.Send("1")
-	c.Send("2")
-}
-
-// 新信息
-func (r *RegisterServerEvent) OnMessage(c *network.TcpServerClient, msg interface{}) {
+func (r *RegisterEvent) OnMessage(c network.Connect, message interface{}) {
 	var data RegisterMessage
-	err := json.Unmarshal([]byte(msg.(string)), &data)
+	err := json.Unmarshal([]byte(message.(string)), &data)
 	if err != nil {
 		fmt.Println(err)
-		_ = c.Close()
+		c.Close()
 		return
 	}
 	if r.SecretKey != "" {
 		if data.SecretKey != r.SecretKey {
 			fmt.Println("秘要不对")
-			_ = c.Close()
+			c.Close()
 			return
 		}
 	}
@@ -66,40 +54,43 @@ func (r *RegisterServerEvent) OnMessage(c *network.TcpServerClient, msg interfac
 		return
 	default:
 		fmt.Println("不认识的事件定义")
-		_ = c.Close()
+		c.Close()
 	}
 }
 
-// 链接关闭
-func (r *RegisterServerEvent) OnClose(c *network.TcpServerClient) {
-	_, hasG := r.gatewayConnections[c.Id]
+func (r *RegisterEvent) OnClose(c network.Connect) {
+	_, hasG := r.gatewayConnections[c.GetConnectionId()]
 	if hasG == true {
-		delete(r.gatewayConnections, c.Id)
+		delete(r.gatewayConnections, c.GetConnectionId())
 		r.broadcastAddresses(0)
 	}
 
-	_, hasW := r.workerConnections[c.Id]
+	_, hasW := r.workerConnections[c.GetConnectionId()]
 	if hasW == true {
-		delete(r.workerConnections, c.Id)
+		delete(r.workerConnections, c.GetConnectionId())
 	}
 }
 
+func (*RegisterEvent) OnError(listen network.ListenTcp, err error) {
+	panic("implement me")
+}
+
 // gateway 链接
-func (r *RegisterServerEvent) gatewayConnect(c *network.TcpServerClient, msg RegisterMessage) {
+func (r *RegisterEvent) gatewayConnect(c network.Connect, msg RegisterMessage) {
 	if msg.Address == "" {
 		println("address not found")
-		_ = c.Close()
+		c.Close()
 		return
 	}
 	// 推入列表
-	r.gatewayConnections[c.Id] = msg.Address
+	r.gatewayConnections[c.GetConnectionId()] = msg.Address
 	r.broadcastAddresses(0)
 }
 
 // worker 链接
-func (r *RegisterServerEvent) workerConnect(c *network.TcpServerClient, msg RegisterMessage) {
+func (r *RegisterEvent) workerConnect(c network.Connect, msg RegisterMessage) {
 	// 推入列表
-	r.workerConnections[c.Id] = c
+	r.workerConnections[c.GetConnectionId()] = c
 	r.broadcastAddresses(0)
 }
 
@@ -107,7 +98,7 @@ func (r *RegisterServerEvent) workerConnect(c *network.TcpServerClient, msg Regi
 向 BusinessWorker 广播 gateway 内部通讯地址
 0 全部发生
 */
-func (r *RegisterServerEvent) broadcastAddresses(id uint32) {
+func (r *RegisterEvent) broadcastAddresses(id uint32) {
 	type ConList struct {
 		Event     string   `json:"event"`
 		Addresses []string `json:"addresses"`
@@ -129,5 +120,12 @@ func (r *RegisterServerEvent) broadcastAddresses(id uint32) {
 
 	for _, worker := range r.workerConnections {
 		worker.Send(sendMsg)
+	}
+}
+
+func NewRegisterEvent() network.Event {
+	return &RegisterEvent{
+		gatewayConnections: make(map[uint32]string),
+		workerConnections:  make(map[uint32]network.Connect),
 	}
 }
