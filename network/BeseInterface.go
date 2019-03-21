@@ -26,18 +26,18 @@ type Connect interface {
 	Read() (interface{}, error)
 	SetExtend(extend interface{})
 	GetExtend() interface{}
-	GetIp() string
+	GetIp() uint32
 	GetPort() uint16
 }
 
 type Event interface {
 	OnStart(listen ListenTcp)
 	// 新链接
-	OnConnect(c Connect)
+	OnConnect(connect Connect)
 	// 新信息
-	OnMessage(c Connect, message interface{})
+	OnMessage(connect Connect, message interface{})
 	// 链接关闭
-	OnClose(c Connect)
+	OnClose(connect Connect)
 	// 发送错误
 	OnError(listen ListenTcp, err error)
 }
@@ -46,5 +46,5 @@ type Protocol interface {
 	// 读入处理
 	Read(conn net.Conn) (interface{}, error)
 	// 发送处理
-	Write(connect Connect, msg interface{}) []byte
+	Write(msg interface{}) []byte
 }

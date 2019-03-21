@@ -2,6 +2,7 @@ package ws
 
 import (
 	"GatewayWorker/network"
+	"GatewayWorker/network/protocol"
 	"GatewayWorker/network/tcp"
 	"github.com/gorilla/websocket"
 	"log"
@@ -64,6 +65,9 @@ func (server *Server) SetProtocol(protocol network.Protocol) {
 }
 
 func (server *Server) GetProtocol() network.Protocol {
+	if server.protocol == nil {
+		server.protocol = protocol.NewNothingProtocol()
+	}
 	return server.protocol
 }
 
@@ -98,11 +102,11 @@ func (server *Server) Upgrade(w http.ResponseWriter, r *http.Request) {
 	// 信息size上限
 	con.SetReadLimit(maxMessageSize)
 	// 设置底层网络连接的读取截止日期。读取超时后，websocket连接状态已损坏，所有将来的读取都将返回错误。t的零值意味着读取不会超时。
-	con.SetReadDeadline(time.Now().Add(pongWait))
+	// con.SetReadDeadline(time.Now().Add(pongWait))
 	// Pong 信息
 	con.SetPongHandler(func(string) error { _ = con.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-
-	var connection network.Connect = NewConnection(con, server, server.lastId)
+	server.lastId++
+	var connection = NewConnection(con, server, server.lastId)
 	go server.event.OnConnect(connection)
 	go server.readPump(con, connection)
 }
@@ -116,6 +120,7 @@ func (server *Server) readPump(con *websocket.Conn, connection network.Connect) 
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("websocket error: %v", err)
 			}
+			con.Close()
 			break
 		}
 		go server.event.OnMessage(connection, message)

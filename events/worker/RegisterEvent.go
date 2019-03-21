@@ -71,7 +71,7 @@ func (r *RegisterEvent) checkGatewayConnections() {
 		if con == nil {
 			worker := tcp.NewClient()
 			worker.SetAddress(network.NewAddress(addr))
-			worker.SetConnectionEvent(NewLogicEvent(r, addr))
+			worker.SetConnectionEvent(NewGatewayEvent(r, addr))
 			worker.SetProtocol(protocol.NewGatewayProtocol())
 			go worker.ListenAndServe()
 		}
@@ -89,6 +89,9 @@ func (r *RegisterEvent) UpdateGatewayConnections(addr string, con network.Connec
 	}
 }
 
+/*
+连接注册中心
+*/
 func NewRegisterEvent() network.Event {
 	return &RegisterEvent{
 		gatewayAddresses: map[string]network.Connect{},

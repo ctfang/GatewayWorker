@@ -6,24 +6,35 @@ import (
 )
 
 type WorkerRouter struct {
-	// 消费者 worker 注册列表
+	// worker ConnectionId 映射 worker
 	workers map[uint32]network.Connect
-
-	// client 列表
+	// client ConnectionId 映射 client
 	Clients map[uint32]network.Connect
-	// client ConnectionId 映射 worker id
-	clientList map[uint32]uint32
+	// client ConnectionId 映射 worker ，记录已经通讯过的通道 client =》 worker
+	clientList map[uint32]network.Connect
 }
 
 var Router = &WorkerRouter{
 	workers:    map[uint32]network.Connect{},
-	clientList: map[uint32]uint32{},
+	clientList: map[uint32]network.Connect{},
 	Clients:    map[uint32]network.Connect{},
 }
 
-func (w *WorkerRouter) GetWorker(c network.Connect) network.Connect {
-	workerId := w.clientList[c.GetConnectionId()]
-	return w.workers[workerId]
+func (w *WorkerRouter) GetWorker(c network.Connect) (network.Connect, error) {
+	cid := c.GetConnectionId()
+	if worker, ok := w.clientList[cid]; ok {
+		// 已经通信过的通道
+		return worker, nil
+	} else {
+		// 随机分配一个worker
+		for _, worker := range w.workers {
+			w.clientList[cid] = worker
+			return worker, nil
+		}
+	}
+	// 不存在
+	return nil, errors.New("找不到worker")
+
 }
 
 func (w *WorkerRouter) AddedWorker(worker network.Connect) {
@@ -34,9 +45,10 @@ func (w *WorkerRouter) AddedWorker(worker network.Connect) {
 worker 断开
 */
 func (w *WorkerRouter) DeleteWorker(worker network.Connect) {
-	delete(w.workers, worker.GetConnectionId())
-	for clientId, workerId := range w.clientList {
-		if workerId == worker.GetConnectionId() {
+	cid := worker.GetConnectionId()
+	delete(w.workers, cid)
+	for clientId, worker := range w.clientList {
+		if cid == worker.GetConnectionId() {
 			delete(w.clientList, clientId)
 		}
 	}
@@ -45,14 +57,13 @@ func (w *WorkerRouter) DeleteWorker(worker network.Connect) {
 /**
 新增客户端，并且建立路由映射
 */
-func (w *WorkerRouter) AddedClient(c network.Connect) (uint32, error) {
-	for workerId, _ := range w.workers {
-		w.clientList[c.GetConnectionId()] = workerId
-		w.Clients[c.GetConnectionId()] = c
-		return workerId, nil
+func (w *WorkerRouter) AddedClient(c network.Connect) {
+	ConnectionId := c.GetConnectionId()
+	if _, ok := w.Clients[ConnectionId]; ok {
+		w.DeleteClient(ConnectionId)
 	}
-	var err = errors.New("未有worker连接")
-	return uint32(0), err
+
+	w.Clients[ConnectionId] = c
 }
 
 func (w *WorkerRouter) GetClient(ConnectionId uint32) (network.Connect, error) {

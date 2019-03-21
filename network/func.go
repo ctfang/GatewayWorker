@@ -3,17 +3,17 @@ package network
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"net"
 	"regexp"
 	"strconv"
 )
 
 // 构建分布式唯一id
-func Bin2hex(ip string, port uint16, id uint32) string {
+func Bin2hex(ip uint32, port uint16, id uint32) string {
 	var msgByte []byte
-	ipUint32 := Ip2long(ip)
 	var buf32 = make([]byte, 4)
 	var bug16 = make([]byte, 2)
-	binary.BigEndian.PutUint32(buf32, ipUint32)
+	binary.BigEndian.PutUint32(buf32, ip)
 	msgByte = append(msgByte, buf32...)
 	binary.BigEndian.PutUint16(bug16, port)
 	msgByte = append(msgByte, bug16...)
@@ -48,4 +48,12 @@ func Ip2long(ipstr string) (ip uint32) {
 	ip += uint32(ip4)
 
 	return ip
+}
+
+func Long2Ip(ip uint32) string {
+	a := byte((ip >> 24) & 0xFF)
+	b := byte((ip >> 16) & 0xFF)
+	c := byte((ip >> 8) & 0xFF)
+	d := byte(ip & 0xFF)
+	return net.IPv4(a, b, c, d).String()
 }

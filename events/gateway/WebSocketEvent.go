@@ -22,65 +22,78 @@ type GatewayHeader struct {
 }
 
 type WebSocketEvent struct {
+	// 内部通讯地址
+	WorkerServerIp   string
+	WorkerServerPort uint16
 }
 
-func (*WebSocketEvent) OnError(listen network.ListenTcp, err error) {
+func (ws *WebSocketEvent) OnError(listen network.ListenTcp, err error) {
 
 }
 
 func (ws *WebSocketEvent) OnStart(listen network.ListenTcp) {
+	ws.WorkerServerIp = events.WorkerAddress.Ip
+	ws.WorkerServerPort = events.WorkerAddress.Port
+
 	log.Println("ws server listening at: ", listen.GetAddress().Str)
 }
 
+func (ws *WebSocketEvent) GetClientId(client network.Connect) string {
+	return network.Bin2hex(network.Ip2long(ws.WorkerServerIp), ws.WorkerServerPort, client.GetConnectionId())
+}
+
 func (ws *WebSocketEvent) OnConnect(client network.Connect) {
-	client.SetUid(network.Bin2hex(events.WorkerAddress.Ip, events.WorkerAddress.Port, client.GetConnectionId()))
-	_, err := Router.AddedClient(client)
-	if err != nil {
-		log.Println(err)
-		ws.OnClose(client)
-		return
-	}
+	client.SetUid(ws.GetClientId(client))
+	// 添加连接池
+	Router.AddedClient(client)
+
 	header := &GatewayHeader{
-		LocalIp:      network.Ip2long(events.WorkerAddress.Ip),
-		LocalPort:    events.WorkerAddress.Port,
-		ClientIp:     network.Ip2long(client.GetIp()),
+		LocalIp:      network.Ip2long(ws.WorkerServerIp),
+		LocalPort:    ws.WorkerServerPort,
+		ClientIp:     client.GetIp(),
 		ClientPort:   client.GetPort(),
 		GatewayPort:  events.GatewayAddress.Port,
 		ConnectionId: client.GetConnectionId(),
 		flag:         1,
 	}
 	client.SetExtend(header)
-	ws.SendToWorker(client, protocol.CMD_ON_CONNECT, "")
+	ws.SendToWorker(client, protocol.CMD_ON_CONNECT, []byte(""))
 }
 
 func (ws *WebSocketEvent) OnMessage(c network.Connect, message interface{}) {
-	body := string(message.([]byte))
-	ws.SendToWorker(c, protocol.CMD_ON_MESSAGE, body)
+	ws.SendToWorker(c, protocol.CMD_ON_MESSAGE, message.([]byte))
 }
 
-func (*WebSocketEvent) OnClose(c network.Connect) {
+func (ws *WebSocketEvent) OnClose(c network.Connect) {
+	ws.SendToWorker(c, protocol.CMD_ON_CLOSE, []byte(""))
 	Router.DeleteClient(c.GetConnectionId())
-	c.Close()
 }
 
-func (ws *WebSocketEvent) SendToWorker(client network.Connect, cmd uint8, body string) {
-	GatewayHeader := client.GetExtend().(GatewayHeader)
+func (ws *WebSocketEvent) SendToWorker(client network.Connect, cmd uint8, body []byte) {
+	gh := client.GetExtend().(*GatewayHeader)
 	msg := protocol.GatewayMessage{
 		PackageLen:   28 + uint32(len(body)),
 		Cmd:          cmd,
-		LocalIp:      GatewayHeader.LocalIp,
-		LocalPort:    GatewayHeader.LocalPort,
-		ClientIp:     GatewayHeader.ClientIp,
-		ClientPort:   GatewayHeader.ClientPort,
-		ConnectionId: GatewayHeader.ConnectionId,
-		Flag:         GatewayHeader.flag,
-		GatewayPort:  GatewayHeader.GatewayPort,
+		LocalIp:      gh.LocalIp,
+		LocalPort:    gh.LocalPort,
+		ClientIp:     gh.ClientIp,
+		ClientPort:   gh.ClientPort,
+		ConnectionId: gh.ConnectionId,
+		Flag:         gh.flag,
+		GatewayPort:  gh.GatewayPort,
 		ExtLen:       0,
 		ExtData:      "",
 		Body:         body,
 	}
 
-	worker := Router.GetWorker(client)
+	worker, err := Router.GetWorker(client)
+	if err != nil {
+		// worker 找不到 获取连接
+		log.Println("主动断开客户端连接 err:", err)
+		client.Close()
+		Router.DeleteClient(client.GetConnectionId())
+		return
+	}
 	worker.Send(msg)
 }
 

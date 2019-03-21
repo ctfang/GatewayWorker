@@ -14,7 +14,7 @@ type Client struct {
 	lastId   uint32
 }
 
-func NewClient() *Client {
+func NewClient() network.ListenTcp {
 	return &Client{}
 }
 
@@ -64,7 +64,7 @@ func (client *Client) ListenAndServe() {
 新的连接
 */
 func (client *Client) newConnection(con net.Conn) {
-	var connection network.Connect = NewConnection(con, client, client.lastId)
+	var connection = NewConnection(con, client, client.lastId)
 	event := client.GetConnectionEvent()
 	go event.OnConnect(connection)
 	defer event.OnClose(connection)
@@ -72,6 +72,7 @@ func (client *Client) newConnection(con net.Conn) {
 	for {
 		message, err := connection.Read()
 		if err != nil {
+			con.Close()
 			break
 		}
 		go event.OnMessage(connection, message)

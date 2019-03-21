@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"GatewayWorker/network"
 	"bytes"
 	"net"
 )
@@ -39,7 +38,7 @@ func (line *Newline) Read(conn net.Conn) (interface{}, error) {
 	return string(message[:count]), nil
 }
 
-func (line *Newline) Write(connect network.Connect, msg interface{}) []byte {
+func (line *Newline) Write(msg interface{}) []byte {
 	switch msg.(type) {
 	case []byte:
 		return append(msg.([]byte), line.delim)

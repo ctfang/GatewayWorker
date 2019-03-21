@@ -19,6 +19,7 @@ type RegisterEvent struct {
 	listen network.ListenTcp
 }
 
+// @error
 func (r *RegisterEvent) OnError(listen network.ListenTcp, err error) {
 	r.retry++
 	log.Println("注册中心连接失败，2秒后重试", r.retry)
@@ -46,7 +47,7 @@ func (*RegisterEvent) OnConnect(c network.Connect) {
 }
 
 func (*RegisterEvent) OnMessage(c network.Connect, message interface{}) {
-
+	log.Println("gateway 收到注册中心的信息 ", message)
 }
 
 func (r *RegisterEvent) OnClose(c network.Connect) {
@@ -59,6 +60,7 @@ func (r *RegisterEvent) OnClose(c network.Connect) {
 	}
 }
 
+// 连接注册中心
 func NewRegisterEvent() network.Event {
 	return &RegisterEvent{}
 }

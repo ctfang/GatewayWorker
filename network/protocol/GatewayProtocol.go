@@ -1,10 +1,11 @@
 package protocol
 
 import (
-	"GatewayWorker/network"
-	"bytes"
-	"fmt"
+	"encoding/binary"
+	"errors"
+	"log"
 	"net"
+	"reflect"
 )
 
 // 发给worker，gateway有一个新的连接
@@ -113,7 +114,7 @@ type GatewayMessage struct {
 
 	ExtLen  uint32
 	ExtData string
-	Body    string
+	Body    []byte
 }
 
 type GatewayProtocol struct {
@@ -123,22 +124,98 @@ func NewGatewayProtocol() *GatewayProtocol {
 	return &GatewayProtocol{}
 }
 
-func (*GatewayProtocol) Read(conn net.Conn) (interface{}, error) {
-	var buf = make([]byte, 1024)
-	var delim byte = '\n'
-	bufLen, err := conn.Read(buf)
+func (g *GatewayProtocol) Read(conn net.Conn) (interface{}, error) {
+	var buf = make([]byte, 4)
+	_, err := conn.Read(buf)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(delim, buf[:bufLen])
-	if i := bytes.IndexByte(buf[:bufLen], delim); i >= 0 {
-		line := buf[:bufLen+1]
-		fmt.Println(string(line))
+
+	PackageLen := uint32(binary.BigEndian.Uint32(buf))
+	if PackageLen > 65535 {
+		// 太大，断开
+		return nil, errors.New("网络io超出限制")
 	}
 
-	return buf, nil
+	var data = make([]byte, PackageLen)
+	copy(data, buf)
+
+	reaLen, err := conn.Read(data[4:])
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == int(PackageLen) {
+		// 数据长度刚好
+		return g.ReadStruct(data), nil
+	}
+	// 长度不足，多读取一次
+	if len(data) < int(PackageLen) {
+		_, err := conn.Read(data[reaLen+4:])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return g.ReadStruct(data), nil
 }
 
-func (*GatewayProtocol) Write(connect network.Connect, msg interface{}) []byte {
-	panic("implement me")
+func (g *GatewayProtocol) Write(msg interface{}) []byte {
+	switch msg.(type) {
+	case GatewayMessage:
+		return g.toByte(msg.(GatewayMessage))
+	default:
+		log.Println("GatewayProtocol 协议格式错误：", msg)
+	}
+	return []byte("")
+}
+
+func (*GatewayProtocol) toByte(msg GatewayMessage) []byte {
+	var msgByte []byte
+
+	value := reflect.ValueOf(msg)
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Field(i)
+		switch field.Kind() {
+		case reflect.String:
+			var bufStr []byte
+			bufStr = []byte(field.String())
+			msgByte = append(msgByte, bufStr...)
+		case reflect.Uint8:
+			msgByte = append(msgByte, uint8(field.Uint()))
+		case reflect.Uint16:
+			var buf16 = make([]byte, 2)
+			binary.BigEndian.PutUint16(buf16, uint16(field.Uint()))
+			msgByte = append(msgByte, buf16...)
+		case reflect.Uint32:
+			var buf32 = make([]byte, 4)
+			binary.BigEndian.PutUint32(buf32, uint32(field.Uint()))
+			msgByte = append(msgByte, buf32...)
+		case reflect.Slice:
+			msgByte = append(msgByte, field.Bytes()...)
+		default:
+			log.Println("GatewayProtocol 不知道的类型", field.Type(), msg)
+		}
+	}
+
+	return msgByte
+}
+
+func (t *GatewayProtocol) ReadStruct(data []byte) GatewayMessage {
+	Message := GatewayMessage{
+		PackageLen:   uint32(binary.BigEndian.Uint32(data[0:4])),
+		Cmd:          data[4],
+		LocalIp:      uint32(binary.BigEndian.Uint32(data[5:9])),
+		LocalPort:    uint16(binary.BigEndian.Uint16(data[9:11])),
+		ClientIp:     uint32(binary.BigEndian.Uint32(data[11:15])),
+		ClientPort:   uint16(binary.BigEndian.Uint16(data[15:17])),
+		ConnectionId: uint32(binary.BigEndian.Uint32(data[17:21])),
+		Flag:         data[21],
+		GatewayPort:  uint16(binary.BigEndian.Uint16(data[22:24])),
+		ExtLen:       uint32(binary.BigEndian.Uint32(data[24:28])),
+	}
+	Message.ExtData = string(data[28 : 28+Message.ExtLen])
+	Message.Body = data[(28 + Message.ExtLen):(Message.PackageLen)]
+
+	return Message
 }

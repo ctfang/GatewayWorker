@@ -10,6 +10,8 @@ import (
 type Connection struct {
 	cid    uint32
 	uid    string
+	ip     uint32
+	port   uint16
 	con    net.Conn
 	pro    network.Protocol
 	extend interface{}
@@ -23,22 +25,30 @@ func (c *Connection) GetExtend() interface{} {
 	return c.extend
 }
 
-func (c *Connection) GetIp() string {
+func (c *Connection) GetIp() uint32 {
+	if c.ip != 0 {
+		return c.ip
+	}
 	ipStr := c.con.RemoteAddr().String()
 	r := `^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})`
 	reg, err := regexp.Compile(r)
 	if err != nil {
-		return ""
+		return 0
 	}
 	ips := reg.FindStringSubmatch(ipStr)
 	if ips == nil {
-		return ""
+		return 0
 	}
 
-	return ips[0]
+	c.ip = network.Ip2long(ips[0])
+	return c.ip
 }
 
 func (c *Connection) GetPort() uint16 {
+	if c.port != 0 {
+		return c.port
+	}
+
 	ipStr := c.con.RemoteAddr().String()
 	r := `\:(\d{1,5})`
 	reg, err := regexp.Compile(r)
@@ -50,16 +60,8 @@ func (c *Connection) GetPort() uint16 {
 		return 0
 	}
 	temp, _ := strconv.Atoi(ips[1])
-	port := uint16(temp)
-	return port
-}
-
-func NewConnection(con net.Conn, server network.ListenTcp, cid uint32) network.Connect {
-	return &Connection{
-		cid: cid,
-		con: con,
-		pro: server.GetProtocol(),
-	}
+	c.port = uint16(temp)
+	return c.port
 }
 
 func (c *Connection) GetConnectionId() uint32 {
@@ -75,7 +77,7 @@ func (c *Connection) GetUid() string {
 }
 
 func (c *Connection) Send(msg interface{}) bool {
-	message := c.pro.Write(c, msg)
+	message := c.pro.Write(msg)
 	_, _ = c.con.Write(message)
 	return true
 }
@@ -90,4 +92,12 @@ func (c *Connection) Close() {
 
 func (c *Connection) Read() (interface{}, error) {
 	return c.pro.Read(c.con)
+}
+
+func NewConnection(con net.Conn, server network.ListenTcp, cid uint32) network.Connect {
+	return &Connection{
+		cid: cid,
+		con: con,
+		pro: server.GetProtocol(),
+	}
 }

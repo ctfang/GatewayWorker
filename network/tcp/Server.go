@@ -15,9 +15,10 @@ type Server struct {
 }
 
 func NewServer() network.ListenTcp {
-	return &Server{
-		lastId: 0,
-	}
+	ser := Server{}
+	ser.lastId = 0
+	ser.protocol = ser.GetProtocol()
+	return &ser
 }
 
 /*
@@ -77,8 +78,9 @@ func (server *Server) ListenAndServe() {
 		log.Fatal("Error starting TCP server.", address.Str)
 		return
 	}
+
 	defer listener.Close()
-	go event.OnStart(server)
+	event.OnStart(server)
 	for {
 		con, _ := listener.Accept()
 		server.lastId += 1
@@ -90,7 +92,7 @@ func (server *Server) ListenAndServe() {
 新的连接
 */
 func (server *Server) newConnection(con net.Conn) {
-	var connection network.Connect = NewConnection(con, server, server.lastId)
+	var connection = NewConnection(con, server, server.lastId)
 	event := server.GetConnectionEvent()
 
 	defer event.OnClose(connection)
@@ -99,6 +101,7 @@ func (server *Server) newConnection(con net.Conn) {
 	for {
 		message, err := connection.Read()
 		if err != nil {
+			connection.Close()
 			break
 		}
 		go event.OnMessage(connection, message)
