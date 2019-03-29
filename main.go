@@ -16,7 +16,8 @@ func main() {
 }
 
 func AddCommands(app *command.Console) {
-	app.AddCommand(console.Gateway{})
-	app.AddCommand(console.Register{})
+	app.AddCommand(&console.Gateway{})
+	app.AddCommand(&console.Register{})
 	app.AddCommand(console.Worker{})
+	app.AddCommand(console.Test{})
 }

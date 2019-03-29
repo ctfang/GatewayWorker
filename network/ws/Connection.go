@@ -23,6 +23,8 @@ type connection struct {
 	writeStatus bool
 }
 
+var MessageType = websocket.TextMessage
+
 func NewConnection(con *websocket.Conn, server network.ListenTcp, cid uint32) network.Connect {
 	conn := &connection{
 		cid:   cid,
@@ -40,7 +42,7 @@ func (c *connection) writeLoop() {
 		select {
 		case msg := <-c.write:
 			_ = c.con.SetWriteDeadline(time.Now().Add(writeWait))
-			err := c.con.WriteMessage(websocket.TextMessage, msg)
+			err := c.con.WriteMessage(MessageType, msg)
 
 			if err != nil {
 				c.Close()

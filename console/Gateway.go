@@ -7,20 +7,22 @@ import (
 	"GatewayWorker/network/protocol"
 	"GatewayWorker/network/tcp"
 	"GatewayWorker/network/ws"
+	"fmt"
 	"github.com/ctfang/command"
+	"github.com/gorilla/websocket"
+	"log"
 )
 
 type Gateway struct {
+	Name string
 }
 
-func (Gateway) Configure() command.Configure {
+func (self *Gateway) Configure() command.Configure {
+	self.Name = "gateway"
 	return command.Configure{
-		Name:        "gateway",
+		Name:        self.Name,
 		Description: "网关进程gateway",
 		Input: command.Argument{
-			Has: []command.ArgParam{
-				{Name: "-d", Description: "是否使用守护进程"},
-			},
 			Argument: []command.ArgParam{
 				{Name: "runType", Description: "执行操作：start、stop、status"},
 			},
@@ -34,7 +36,18 @@ func (Gateway) Configure() command.Configure {
 	}
 }
 
-func (Gateway) Execute(input command.Input) {
+func (self *Gateway) Execute(input command.Input) {
+	switch input.GetArgument("runType") {
+	case "start":
+		self.start(input)
+	case "stop":
+		self.stop(input)
+	case "status":
+		self.status(input)
+	}
+}
+
+func (self *Gateway) start(input command.Input) {
 	events.GatewayAddress = network.NewAddress(input.GetOption("gateway"))
 	events.WorkerAddress = network.NewAddress(input.GetOption("worker"))
 	events.RegisterAddress = network.NewAddress(input.GetOption("register"))
@@ -54,8 +67,21 @@ func (Gateway) Execute(input command.Input) {
 	go register.ListenAndServe()
 
 	// 启动对客户端的websocket连接
+	ws.MessageType = websocket.BinaryMessage
 	server := ws.Server{}
 	server.SetAddress(events.GatewayAddress)
 	server.SetConnectionEvent(gateway.NewWebSocketEvent())
 	server.ListenAndServe()
+}
+
+func (self *Gateway) status(input command.Input) {
+	log.Println("未做")
+}
+
+func (self *Gateway) stop(input command.Input) {
+	err := command.StopSignal(self.Name)
+	if err != nil {
+		fmt.Println("停止失败")
+	}
+	fmt.Println("停止成功")
 }

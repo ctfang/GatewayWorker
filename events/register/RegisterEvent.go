@@ -72,7 +72,7 @@ func (r *RegisterEvent) OnClose(c network.Connect) {
 }
 
 func (*RegisterEvent) OnError(listen network.ListenTcp, err error) {
-	panic("implement me")
+	log.Println("注册中心启动失败", err)
 }
 
 // gateway 链接

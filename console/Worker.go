@@ -18,9 +18,6 @@ func (Worker) Configure() command.Configure {
 		Name:        "worker",
 		Description: "业务worker进程",
 		Input: command.Argument{
-			Has: []command.ArgParam{
-				{Name: "-d", Description: "是否使用守护进程"},
-			},
 			Argument: []command.ArgParam{
 				{Name: "runType", Description: "执行操作：start、stop、status"},
 			},

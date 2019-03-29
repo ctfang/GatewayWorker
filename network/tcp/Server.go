@@ -74,8 +74,9 @@ func (server *Server) ListenAndServe() {
 	event := server.GetConnectionEvent()
 	listener, err := net.Listen("tcp", address.Str)
 	if err != nil {
+
 		go event.OnError(server, &ListenError{address})
-		log.Fatal("Error starting TCP server.", address.Str)
+		log.Fatal("Error starting TCP server.", address.Str, err)
 		return
 	}
 

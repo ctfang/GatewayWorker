@@ -5,20 +5,22 @@ import (
 	"GatewayWorker/events/register"
 	"GatewayWorker/network"
 	"GatewayWorker/network/tcp"
+	"fmt"
 	"github.com/ctfang/command"
+	"log"
+	"os"
 )
 
 type Register struct {
+	Name string
 }
 
-func (Register) Configure() command.Configure {
+func (self *Register) Configure() command.Configure {
+	self.Name = "register"
 	return command.Configure{
-		Name:        "register",
+		Name:        self.Name,
 		Description: "注册中心",
 		Input: command.Argument{
-			Has: []command.ArgParam{
-				{Name: "-d", Description: "是否使用守护进程"},
-			},
 			Argument: []command.ArgParam{
 				{Name: "runType", Description: "执行操作：start、stop、status"},
 			},
@@ -30,7 +32,28 @@ func (Register) Configure() command.Configure {
 	}
 }
 
-func (Register) Execute(input command.Input) {
+func (self *Register) Execute(input command.Input) {
+	switch input.GetArgument("runType") {
+	case "start":
+		self.start(input)
+	case "stop":
+		self.stop(input)
+	case "status":
+		self.status(input)
+	}
+}
+
+func (self *Register) start(input command.Input) {
+	if input.IsDaemon() {
+		logFile, _ := os.OpenFile("register.log", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+		log.SetOutput(logFile)
+	}
+	command.SavePidToFile(self.Name)
+	command.ListenStopSignal(func(sig os.Signal) {
+		command.DeleteSavePidToFile(self.Name)
+		os.Exit(0)
+	})
+
 	events.RegisterAddress = network.NewAddress(input.GetOption("register"))
 	events.SecretKey = input.GetOption("secret")
 
@@ -38,4 +61,16 @@ func (Register) Execute(input command.Input) {
 	server.SetAddress(events.RegisterAddress)
 	server.SetConnectionEvent(register.NewRegisterEvent())
 	server.ListenAndServe()
+}
+
+func (self *Register) status(input command.Input) {
+	log.Println("未做")
+}
+
+func (self *Register) stop(input command.Input) {
+	err := command.StopSignal(self.Name)
+	if err != nil {
+		fmt.Println("停止失败")
+	}
+	fmt.Println("停止成功")
 }
