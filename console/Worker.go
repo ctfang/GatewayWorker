@@ -3,9 +3,9 @@ package console
 import (
 	"GatewayWorker/events"
 	"GatewayWorker/events/worker"
-	"GatewayWorker/network"
-	"GatewayWorker/network/tcp"
 	"github.com/ctfang/command"
+	"github.com/ctfang/network"
+	"github.com/ctfang/network/tcp"
 	"log"
 	"time"
 )

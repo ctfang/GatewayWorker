@@ -12,5 +12,15 @@ github.com/ctfang/command v0.0.0-20190326080353-ad7ca1808d0e h1:faD3fH9LgxMbq+tD
 github.com/ctfang/command v0.0.0-20190326080353-ad7ca1808d0e/go.mod h1:iWJcUCwZReswQ7T5IaRE6ZvGzZ/m9v53Z1na20JttV8=
 github.com/ctfang/command v0.0.0-20190327092056-27958f50a31c h1:mCNCOn6DSwHxtoxla5QxAMZ7p/2UIniZHQM7mvaUeFI=
 github.com/ctfang/command v0.0.0-20190327092056-27958f50a31c/go.mod h1:iWJcUCwZReswQ7T5IaRE6ZvGzZ/m9v53Z1na20JttV8=
+github.com/ctfang/network v0.0.0-20190429074346-19b048566e5a h1:v7j2pUNj6bLC3wevTCG0X6tvfGweCZSBsU1V/Rwyk00=
+github.com/ctfang/network v0.0.0-20190429074346-19b048566e5a/go.mod h1:SwvE4wJJn9yt802WSl2xB3XaWzUjuEi2OCWP+KUWl84=
+github.com/ctfang/network v0.0.0-20190429090036-004fc7c4337d h1:WQOOEQa8LBo3KWVClxiQwGVlaKuh3zapURrr1pdEPog=
+github.com/ctfang/network v0.0.0-20190429090036-004fc7c4337d/go.mod h1:SwvE4wJJn9yt802WSl2xB3XaWzUjuEi2OCWP+KUWl84=
+github.com/ctfang/network v0.0.0-20190429093911-be9dc243aade h1:K64HJrqvee92P1xJJxud12qHNzbEvU1sEnaEdllM2JA=
+github.com/ctfang/network v0.0.0-20190429093911-be9dc243aade/go.mod h1:SwvE4wJJn9yt802WSl2xB3XaWzUjuEi2OCWP+KUWl84=
+github.com/ctfang/network v0.0.0-20190429102712-314135e33356 h1:TYIxZUkOEp927nasiDnirNPbVuNHLeMGrcCh5K2RywU=
+github.com/ctfang/network v0.0.0-20190429102712-314135e33356/go.mod h1:SwvE4wJJn9yt802WSl2xB3XaWzUjuEi2OCWP+KUWl84=
+github.com/ctfang/network v0.0.0-20190430054442-020194823a04 h1:XiGuzzRb1wXSLNM33e7TiP1/mElg2t62b+3zNaogQnM=
+github.com/ctfang/network v0.0.0-20190430054442-020194823a04/go.mod h1:ZGhLBuQadqhVyoZAqJHvPDMUwvUYRkClqGS/+SAiA+I=
 github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=
 github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=

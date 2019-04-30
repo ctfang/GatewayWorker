@@ -3,12 +3,12 @@ package console
 import (
 	"GatewayWorker/events"
 	"GatewayWorker/events/gateway"
-	"GatewayWorker/network"
-	"GatewayWorker/network/protocol"
-	"GatewayWorker/network/tcp"
-	"GatewayWorker/network/ws"
 	"fmt"
 	"github.com/ctfang/command"
+	"github.com/ctfang/network"
+	"github.com/ctfang/network/protocol"
+	"github.com/ctfang/network/tcp"
+	"github.com/ctfang/network/ws"
 	"github.com/gorilla/websocket"
 	"log"
 )

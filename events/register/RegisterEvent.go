@@ -1,9 +1,9 @@
 package register
 
 import (
-	"GatewayWorker/network"
 	"encoding/json"
 	"fmt"
+	"github.com/ctfang/network"
 	"log"
 )
 

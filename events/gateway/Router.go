@@ -1,8 +1,8 @@
 package gateway
 
 import (
-	"GatewayWorker/network"
 	"errors"
+	"github.com/ctfang/network"
 )
 
 type WorkerRouter struct {

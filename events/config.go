@@ -1,7 +1,7 @@
 package events
 
 import (
-	"GatewayWorker/network"
+	"github.com/ctfang/network"
 )
 
 var GatewayAddress *network.Address

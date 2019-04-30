@@ -3,10 +3,10 @@ package console
 import (
 	"GatewayWorker/events"
 	"GatewayWorker/events/register"
-	"GatewayWorker/network"
-	"GatewayWorker/network/tcp"
 	"fmt"
 	"github.com/ctfang/command"
+	"github.com/ctfang/network"
+	"github.com/ctfang/network/tcp"
 	"log"
 	"os"
 )

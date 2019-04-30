@@ -2,8 +2,8 @@ package gateway
 
 import (
 	"GatewayWorker/events"
-	"GatewayWorker/network"
 	"encoding/json"
+	"github.com/ctfang/network"
 	"log"
 	"time"
 )

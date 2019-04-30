@@ -2,8 +2,8 @@ package worker
 
 import (
 	"GatewayWorker/events"
-	"GatewayWorker/network"
-	"GatewayWorker/network/protocol"
+	"github.com/ctfang/network"
+	"github.com/ctfang/network/protocol"
 )
 
 type GatewayHandle struct {

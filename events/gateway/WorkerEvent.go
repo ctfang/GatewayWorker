@@ -1,8 +1,8 @@
 package gateway
 
 import (
-	"GatewayWorker/network"
-	"GatewayWorker/network/protocol"
+	"github.com/ctfang/network"
+	"github.com/ctfang/network/protocol"
 	"log"
 )
 

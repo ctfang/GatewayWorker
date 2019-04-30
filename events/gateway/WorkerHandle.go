@@ -3,9 +3,9 @@ package gateway
 import (
 	"GatewayWorker/events"
 	"GatewayWorker/events/worker"
-	"GatewayWorker/network"
-	"GatewayWorker/network/protocol"
 	"encoding/json"
+	"github.com/ctfang/network"
+	"github.com/ctfang/network/protocol"
 	"log"
 )
 

@@ -2,10 +2,10 @@ package worker
 
 import (
 	"GatewayWorker/events"
-	"GatewayWorker/network"
-	"GatewayWorker/network/protocol"
-	"GatewayWorker/network/tcp"
 	"encoding/json"
+	"github.com/ctfang/network"
+	"github.com/ctfang/network/protocol"
+	"github.com/ctfang/network/tcp"
 	"log"
 )
 
