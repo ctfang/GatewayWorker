@@ -1,7 +1,7 @@
 package main
 
 import (
-	"GatewayWorker/console"
+	"github.com/ctfang/GatewayWorker/console"
 	"github.com/ctfang/command"
 )
 

@@ -1,8 +1,8 @@
 package console
 
 import (
-	"GatewayWorker/events"
-	"GatewayWorker/events/worker"
+	"github.com/ctfang/GatewayWorker/events"
+	"github.com/ctfang/GatewayWorker/events/worker"
 	"github.com/ctfang/command"
 	"github.com/ctfang/network"
 	"github.com/ctfang/network/tcp"

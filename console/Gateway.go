@@ -1,9 +1,9 @@
 package console
 
 import (
-	"GatewayWorker/events"
-	"GatewayWorker/events/gateway"
 	"fmt"
+	"github.com/ctfang/GatewayWorker/events"
+	"github.com/ctfang/GatewayWorker/events/gateway"
 	"github.com/ctfang/command"
 	"github.com/ctfang/network"
 	"github.com/ctfang/network/protocol"

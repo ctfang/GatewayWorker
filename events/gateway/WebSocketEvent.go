@@ -1,7 +1,7 @@
 package gateway
 
 import (
-	"GatewayWorker/events"
+	"github.com/ctfang/GatewayWorker/events"
 	"github.com/ctfang/network"
 	"github.com/ctfang/network/protocol"
 	"log"
